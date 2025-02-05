@@ -13,6 +13,7 @@ export default function Navbar() {
         text="Receipts"
         active={pathname === "/receipts"}
       />
+      <NavItem href="/upload" text="Upload" active={pathname === "/upload"} />
     </nav>
   );
 }

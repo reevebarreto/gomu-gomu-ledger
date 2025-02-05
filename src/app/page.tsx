@@ -1,21 +1,25 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Receipt } from "@/types";
 
-type Receipt = {
-  id: string;
-  store: string;
-  total: string;
-  date: string;
+const listVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { staggerChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: -10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
 
 export default function UploadPage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [recentReceipts, setRecentReceipts] = useState<Receipt[]>([]);
-  const [image, setImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchReceipts();
@@ -42,105 +46,33 @@ export default function UploadPage() {
       console.error("Error fetching receipts:", error);
     }
   };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setFile(event.target.files[0]);
-      setImage(URL.createObjectURL(event.target.files[0]));
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!file) return;
-
-    setUploading(true);
-    setMessage("");
-
-    const formData = new FormData();
-    formData.append("image", file);
-
-    try {
-      const response = await fetch("/api/receipts/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
-
-      setMessage("Upload successful!");
-
-      await fetchReceipts();
-    } catch (error) {
-      // when the error is a response from the server NextResponse.json({ error: error.message }, { status: 500 });
-      if (error instanceof Response) {
-        const json = await error.json();
-        setMessage(json.error);
-      } else {
-        setMessage("An unexpected error occurred");
-      }
-    } finally {
-      setUploading(false);
-    }
-  };
-
   return (
-    <div className="h-screen flex items-center justify-center p-4">
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="flex flex-col items-center justify-center space-y-4 border p-4 rounded-lg">
-          <label className="flex flex-col cursor-pointer">
-            <input type="file" accept="image/*" onChange={handleFileChange} />
-          </label>
-          {image && (
-            <>
-              <div className="w-48 h-48 flex items-center justify-center border">
-                <Image
-                  height={192}
-                  width={192}
-                  src={image}
-                  alt="Uploaded Receipt"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <button
-                className="flex items-center space-x-2"
-                onClick={handleUpload}
-                disabled={!file || uploading}
+    <div className="flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl p-4 rounded-lg">
+        <h2 className="text-lg font-semibold mb-2">Recent Receipts</h2>
+        <motion.ul
+          className="space-y-2"
+          initial="hidden"
+          animate="visible"
+          variants={listVariants}
+        >
+          {recentReceipts.length > 0 &&
+            recentReceipts.map((receipt) => (
+              <motion.li
+                key={receipt.id}
+                className={`p-3 border rounded-lg hover:bg-gray-100}`}
+                variants={itemVariants}
               >
-                <Image
-                  height={24}
-                  width={24}
-                  src="/camera.png"
-                  alt="Camera Icon"
-                  className="w-6 h-6"
-                />
-                <span>Upload Receipt</span>
-              </button>
-              {message && <p>{message}</p>}
-            </>
-          )}
-        </div>
-
-        <div className="w-full max-w-md border p-4 rounded-lg">
-          <h2 className="text-lg font-semibold mb-2">Recent Receipts</h2>
-          <ul className="space-y-2">
-            {recentReceipts.length > 0 ? (
-              recentReceipts.map((receipt) => (
-                <li
-                  key={receipt.id}
-                  className="p-2 border rounded-lg flex justify-between"
-                >
-                  <span>{receipt.date}</span>
-                  <span>{receipt.store}</span>
+                <div className="flex justify-between">
+                  <span className="font-medium">{receipt.store}</span>
                   <span className="font-semibold">${receipt.total}</span>
-                </li>
-              ))
-            ) : (
-              <p className="text-gray-500">No receipts found.</p>
-            )}
-          </ul>
-        </div>
+                </div>
+                <p className="text-sm text-gray-500">
+                  {new Date(receipt.date).toLocaleDateString()}
+                </p>
+              </motion.li>
+            ))}
+        </motion.ul>
       </div>
     </div>
   );
