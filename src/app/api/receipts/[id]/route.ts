@@ -1,57 +1,99 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
 
-  const { data, error } = await supabase
-    .from("receipts")
-    .select("*, receipt_items(*)")
-    .eq("id", id) // Get the receipt by ID
-    .single();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing receipt ID" },
+        { status: 400 }
+      );
+    }
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const { data, error } = await supabase
+      .from("receipts")
+      .select("*, receipt_items(*)")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data, { status: 200 });
+  } catch {
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(data);
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
-  const { store, date, total } = await req.json();
+export async function PUT(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    const { store, date, total } = await req.json();
 
-  const { data, error } = await supabase
-    .from("receipts")
-    .update({ store, date, total })
-    .eq("id", id)
-    .select()
-    .single();
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing receipt ID" },
+        { status: 400 }
+      );
+    }
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const { data, error } = await supabase
+      .from("receipts")
+      .update({ store, date, total })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(
+      { message: "Receipt updated successfully", data },
+      { status: 200 }
+    );
+  } catch {
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(data);
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
 
-  const { error } = await supabase.from("receipts").delete().eq("id", id);
+    if (!id) {
+      return NextResponse.json(
+        { error: "Missing receipt ID" },
+        { status: 400 }
+      );
+    }
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const { error } = await supabase.from("receipts").delete().eq("id", id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(
+      { message: "Receipt deleted successfully" },
+      { status: 200 }
+    );
+  } catch {
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({ message: "Receipt deleted successfully" });
 }
