@@ -65,7 +65,9 @@ export default function UploadPage() {
               >
                 <div className="flex justify-between">
                   <span className="font-medium">{receipt.store}</span>
-                  <span className="font-semibold">${receipt.total}</span>
+                  <span className="font-semibold">
+                    €{parseFloat(receipt.total).toFixed(2)}
+                  </span>
                 </div>
                 <p className="text-sm text-gray-500">
                   {new Date(receipt.date).toLocaleDateString()}

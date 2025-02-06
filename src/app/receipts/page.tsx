@@ -66,7 +66,9 @@ export default function ReceiptsPage() {
               >
                 <div className="flex justify-between">
                   <span className="font-medium">{receipt.store}</span>
-                  <span className="font-semibold">${receipt.total}</span>
+                  <span className="font-semibold">
+                    €{receipt.total?.toFixed(2)}
+                  </span>
                 </div>
                 <p className="text-sm text-gray-500">
                   {new Date(receipt.date).toLocaleDateString()}
@@ -108,7 +110,7 @@ export default function ReceiptsPage() {
                 )}
               </ul>
               <p className="mt-4 font-bold text-lg">
-                Total: $
+                Total: €
                 {selectedReceipt.total
                   ? selectedReceipt.total.toFixed(2)
                   : "0.00"}

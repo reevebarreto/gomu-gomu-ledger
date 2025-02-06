@@ -34,8 +34,12 @@ export default function UploadPage() {
       if (!response.ok) {
         throw new Error("Upload failed");
       }
+      response.json().then((data) => {
+        console.log(data);
+      });
       setMessage("Upload successful!");
-    } catch {
+    } catch (e) {
+      console.log(e);
       setMessage("An unexpected error occurred");
     } finally {
       setUploading(false);

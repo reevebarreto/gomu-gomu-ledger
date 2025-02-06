@@ -1,11 +1,9 @@
+import { extractReceiptData } from "@/lib/azureReceiptParser";
 import { supabase } from "@/lib/supabase";
-import visionHelper from "@/lib/visionHelper";
-import parseReceiptText from "@/lib/parseReceiptText";
-
-import { currentUser } from "@clerk/nextjs/server";
-
-import { NextResponse } from "next/server";
 import { syncUserToSupabase } from "@/lib/syncUser";
+import { currentUser } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+import sharp from "sharp";
 
 export async function POST(req: Request) {
   const user = await currentUser();
@@ -17,41 +15,25 @@ export async function POST(req: Request) {
 
   await syncUserToSupabase(user);
 
-  const body = await req.formData();
-  const imageFile = body.get("image");
+  // Get Image File
+  const formData = await req.formData();
+  const file = formData.get("image") as File;
 
-  if (!imageFile) {
-    return NextResponse.json({ error: "No image uploaded" }, { status: 400 });
+  if (!file) {
+    return Response.json({ error: "No file uploaded" }, { status: 400 });
   }
 
-  if (!(imageFile instanceof File)) {
-    return NextResponse.json({ error: "Invalid image file" }, { status: 400 });
-  }
+  // Convert File to Buffer
+  const buffer = Buffer.from(await file.arrayBuffer());
 
-  const imageBuffer = await imageFile.arrayBuffer();
-  const extractedText = await visionHelper(Buffer.from(imageBuffer));
-  const parsedData = parseReceiptText(extractedText);
+  // Process Image (Resize + Compress)
+  const processedImageBuffer = await sharp(buffer)
+    .resize({ width: 2000, withoutEnlargement: true }) // Resize if larger than 2000px
+    .jpeg({ quality: 70 }) // Convert to JPEG and compress
+    .toBuffer();
 
-  let receiptDate: string;
-  if (parsedData.date) {
-    // Check if the date is already in ISO format: YYYY-MM-DD
-    const isoRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (isoRegex.test(parsedData.date)) {
-      receiptDate = parsedData.date;
-    } else {
-      // Attempt to parse it and convert it
-      const dateObj = new Date(parsedData.date);
-      if (isNaN(dateObj.getTime())) {
-        // Fallback: if the parsed date is invalid, use today's date
-        receiptDate = new Date().toISOString().split("T")[0];
-      } else {
-        receiptDate = dateObj.toISOString().split("T")[0];
-      }
-    }
-  } else {
-    // If no date was found, fallback to today's date
-    receiptDate = new Date().toISOString().split("T")[0];
-  }
+  // Extract Receipt Data
+  const receiptData = await extractReceiptData(processedImageBuffer);
 
   // Insert into Supabase
   const { data, error } = await supabase
@@ -59,24 +41,24 @@ export async function POST(req: Request) {
     .insert([
       {
         user_id: user.id,
-        store: parsedData.store,
-        date: receiptDate,
-        total: parsedData.total,
+        store: receiptData?.store,
+        date: receiptData?.date,
+        total: receiptData?.total,
       },
     ])
-    .select()
+    .select("id")
     .single();
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const receiptId = data.id;
+  const receiptId = data?.id;
 
-  for (const item of parsedData.items) {
+  for (const item of receiptData?.items) {
     await supabase
       .from("receipt_items")
       .insert({ receipt_id: receiptId, name: item.name, price: item.price });
   }
 
-  return NextResponse.json({ message: "Receipt uploaded", receipt: data });
+  return Response.json(receiptData);
 }
