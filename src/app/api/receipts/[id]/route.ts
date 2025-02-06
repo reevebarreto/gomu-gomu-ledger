@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { currentUser } from "@clerk/nextjs/server";
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await currentUser();
+
+    // Check if user is authenticated
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -17,6 +25,7 @@ export async function GET(req: NextRequest) {
       .from("receipts")
       .select("*, receipt_items(*)")
       .eq("id", id)
+      .eq("user_id", user.id)
       .single();
 
     if (error) {
@@ -34,6 +43,13 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const user = await currentUser();
+
+    // Check if user is authenticated
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const { store, date, total } = await req.json();
@@ -49,6 +65,7 @@ export async function PUT(req: NextRequest) {
       .from("receipts")
       .update({ store, date, total })
       .eq("id", id)
+      .eq("user_id", user.id)
       .select()
       .single();
 
@@ -70,6 +87,13 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const user = await currentUser();
+
+    // Check if user is authenticated
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
@@ -80,7 +104,11 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const { error } = await supabase.from("receipts").delete().eq("id", id);
+    const { error } = await supabase
+      .from("receipts")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,19 +1,28 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { ReceiptItems } from "@/types";
 
-interface Receipt {
-  id: string;
-  store: string;
-  date: string;
-  total: number;
-  receipt_items: { name: string; price: number }[];
-}
+const listVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { staggerChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: -10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+};
 
 export default function ReceiptsPage() {
-  const [receipts, setReceipts] = useState<Receipt[]>([]);
-  const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
-  console.log(receipts);
+  const [receipts, setReceipts] = useState<ReceiptItems[]>([]);
+  const [selectedReceipt, setSelectedReceipt] = useState<ReceiptItems | null>(
+    null
+  );
 
   // Fetch receipts from API
   useEffect(() => {
@@ -39,15 +48,21 @@ export default function ReceiptsPage() {
       {/* Left Side - List of Receipts */}
       <div className="w-1/2 border-r p-4 overflow-y-auto">
         <h2 className="text-lg font-semibold mb-2">All Receipts</h2>
-        <ul className="space-y-2">
+        <motion.ul
+          className="space-y-2"
+          initial="hidden"
+          animate="visible"
+          variants={listVariants}
+        >
           {receipts.length > 0 ? (
             receipts.map((receipt) => (
-              <li
+              <motion.li
                 key={receipt.id}
                 onClick={() => setSelectedReceipt(receipt)}
                 className={`p-3 border rounded-lg cursor-pointer hover:bg-gray-100 ${
                   selectedReceipt?.id === receipt.id ? "bg-gray-200" : ""
                 }`}
+                variants={itemVariants}
               >
                 <div className="flex justify-between">
                   <span className="font-medium">{receipt.store}</span>
@@ -56,12 +71,12 @@ export default function ReceiptsPage() {
                 <p className="text-sm text-gray-500">
                   {new Date(receipt.date).toLocaleDateString()}
                 </p>
-              </li>
+              </motion.li>
             ))
           ) : (
             <p className="text-gray-500">No receipts found.</p>
           )}
-        </ul>
+        </motion.ul>
       </div>
 
       {/* Right Side - Selected Receipt Details */}
@@ -93,7 +108,10 @@ export default function ReceiptsPage() {
                 )}
               </ul>
               <p className="mt-4 font-bold text-lg">
-                Total: ${selectedReceipt.total.toFixed(2)}
+                Total: $
+                {selectedReceipt.total
+                  ? selectedReceipt.total.toFixed(2)
+                  : "0.00"}
               </p>
             </div>
           </div>

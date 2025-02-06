@@ -7,7 +7,7 @@ const parseReceiptText = (extractedText: string | null | undefined) => {
   if (!extractedText) {
     return {
       store: "Unknown",
-      date: null,
+      date: new Date().toISOString().split("T")[0], // Default to today
       items: [],
       total: 0,
     };
@@ -18,53 +18,77 @@ const parseReceiptText = (extractedText: string | null | undefined) => {
     .map((line) => line.trim())
     .filter((line) => line);
 
-  const storeName = lines.length > 0 ? lines[0] : null; // Assume first line is the store name
-  let date = null;
-  const items: ReceiptItem[] = [];
-  let total: number | null = null;
+  // 1️⃣ **Extract Store Name (First Line)**
+  const storeName = lines[0] || "Unknown";
 
-  // Attempt to find the date
+  // 2️⃣ **Extract Date (If Present)**
+  let date: string | null = null;
   const datePattern = /\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/;
   for (const line of lines) {
-    const dateMatch = line.match(datePattern);
-    if (dateMatch) {
-      date = dateMatch[1];
+    const match = line.match(datePattern);
+    if (match) {
+      date = match[1];
       break;
     }
   }
-
   if (!date) {
-    date = new Date().toISOString().split("T")[0]; // Use today if no date found
+    date = new Date().toISOString().split("T")[0]; // Default to today
   }
 
-  // Extract items and prices (handling multi-line format)
-  let itemName = null;
+  // 3️⃣ **Extract Prices (and assume the last price is the total)**
+  const pricePattern = /€\s?(\d+\.\d{2})|EUR\s?(\d+\.\d{2})/g;
+  let lastPrice: number | null = null;
+  const potentialPrices: number[] = [];
+
+  lines.forEach((line) => {
+    let match;
+    while ((match = pricePattern.exec(line)) !== null) {
+      const price = parseFloat(match[1] || match[2]);
+      potentialPrices.push(price);
+    }
+  });
+
+  if (potentialPrices.length > 0) {
+    lastPrice = potentialPrices[potentialPrices.length - 1]; // Assume the last price is the total
+  }
+
+  // 4️⃣ **Extract Items (Matching Names with Prices)**
+  const items: ReceiptItem[] = [];
+  let currentItemName = "";
+  let collectingItems = true;
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line.toUpperCase().includes("TOTAL")) {
-      break; // Stop processing items when reaching total
-    }
 
-    // Match standalone prices (ignoring quantity breakdowns like '2 @ £0.95')
-    const priceMatch = /^(\d+\.?\d*)\s*[A-Z]?$|^£?(\d+\.?\d*)$/.exec(line);
-    if (priceMatch && itemName) {
-      const price = parseFloat(priceMatch[1] || priceMatch[2]);
-      items.push({ name: itemName, price });
-      itemName = null; // Reset item name after price is found
-    } else if (!/\d+\s*@/.test(line) && !/^£?\d+\.?\d*$/.test(line)) {
-      itemName = line; // Assume this line is an item name
-    }
-  }
-
-  // Extract total (handling multi-line format)
-  for (let i = 0; i < lines.length - 1; i++) {
-    if (lines[i].toUpperCase().includes("TOTAL")) {
-      try {
-        total = parseFloat(lines[i + 1].replace("£", "")); // Remove currency symbol if present
-      } catch {
-        continue;
-      }
+    // Ignore sections that indicate the receipt summary (payment details, total, etc.)
+    if (
+      line.toUpperCase().includes("TOTAL") ||
+      line.toUpperCase().includes("VISA") ||
+      line.toUpperCase().includes("CARD") ||
+      line.toUpperCase().includes("CLUBCARD") ||
+      line.toUpperCase().includes("CHANGE DUE") ||
+      line.toUpperCase().includes("AUTH CODE") ||
+      line.toUpperCase().includes("MERCHANT")
+    ) {
+      collectingItems = false;
       break;
+    }
+
+    // Check if the line contains a price
+    const priceMatch = line.match(pricePattern);
+    if (priceMatch) {
+      const price = parseFloat(priceMatch[1] || priceMatch[2]);
+
+      // Store the item only if we previously collected a name
+      if (currentItemName) {
+        items.push({ name: currentItemName, price });
+        currentItemName = ""; // Reset
+      }
+    } else {
+      // If no price is found, assume it's part of the item name
+      if (collectingItems) {
+        currentItemName += (currentItemName ? " " : "") + line;
+      }
     }
   }
 
@@ -72,7 +96,7 @@ const parseReceiptText = (extractedText: string | null | undefined) => {
     store: storeName,
     date: date,
     items,
-    total,
+    total: lastPrice || 0,
   };
 };
 

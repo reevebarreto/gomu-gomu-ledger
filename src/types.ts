@@ -4,3 +4,11 @@ export type Receipt = {
   total: string;
   date: string;
 };
+
+export type ReceiptItems = {
+  id: string;
+  store: string;
+  date: string;
+  total: number;
+  receipt_items: { name: string; price: number }[];
+};
