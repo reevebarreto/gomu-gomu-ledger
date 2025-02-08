@@ -10,5 +10,5 @@ export type ReceiptItems = {
   store: string;
   date: string;
   total: number;
-  receipt_items: { name: string; price: number }[];
+  receipt_items: { name: string; price: number; quantity: number }[];
 };

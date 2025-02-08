@@ -131,7 +131,9 @@ export default function ReceiptsPage() {
                       key={index}
                       className="flex justify-between border-b py-1"
                     >
-                      <span>{item.name}</span>
+                      <span>
+                        {item.name} x {item.quantity}
+                      </span>
                       <span className="font-medium">
                         €{item.price.toFixed(2)}
                       </span>

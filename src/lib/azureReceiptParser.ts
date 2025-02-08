@@ -46,6 +46,7 @@ export async function extractReceiptData(imageBuffer: Buffer) {
         receipt.Items?.valueArray?.map((item: any) => ({
           name: item.valueObject?.Description?.valueString || "Unknown Item",
           price: item.valueObject?.TotalPrice?.valueCurrency?.amount || 0,
+          quantity: item.valueObject?.Quantity?.valueNumber || 1,
         })) || [],
     };
   } catch (error) {
