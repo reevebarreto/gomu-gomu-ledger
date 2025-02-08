@@ -87,10 +87,10 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await params;
 
     const user = await currentUser();
 

@@ -24,7 +24,9 @@ export async function extractReceiptData(imageBuffer: Buffer) {
 
     // Wait for the processing to complete
     const poller = await getLongRunningPoller(client, initialResponse); // Add await here
-    const analyzeResult = (await poller.pollUntilDone()).body.analyzeResult;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const analyzeResult = ((await poller.pollUntilDone()) as any).body
+      .analyzeResult;
 
     if (!analyzeResult?.documents || analyzeResult.documents.length === 0) {
       throw new Error("No receipt data detected.");
