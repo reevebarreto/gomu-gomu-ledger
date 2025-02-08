@@ -53,9 +53,6 @@ export default function ReceiptsPage() {
         return;
       }
 
-      const data = await response.json(); // Ensure JSON is parsed safely
-      console.log("Deleted receipt:", data);
-
       // Remove deleted receipt from state
       setReceipts((prevReceipts) =>
         prevReceipts.filter((receipt) => receipt.id !== selectedReceipt.id)

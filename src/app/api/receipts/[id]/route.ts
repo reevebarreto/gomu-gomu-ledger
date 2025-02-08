@@ -87,17 +87,16 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    console.log("DELETE request received");
+    const { id } = context.params;
+
     const user = await currentUser();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const { id } = await params;
 
     if (!id) {
       return NextResponse.json(
@@ -105,7 +104,6 @@ export async function DELETE(
         { status: 400 }
       );
     }
-    console.log("Deleting receipt with ID:", id);
 
     const { error } = await supabase
       .from("receipts")

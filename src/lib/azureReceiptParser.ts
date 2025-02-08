@@ -32,8 +32,6 @@ export async function extractReceiptData(imageBuffer: Buffer) {
 
     const receipt = analyzeResult.documents[0].fields;
 
-    console.log("Receipt data:", receipt);
-
     let date = new Date();
     if (receipt.TransactionDate?.valueDate)
       date = new Date(receipt.TransactionDate?.valueDate);
@@ -43,6 +41,7 @@ export async function extractReceiptData(imageBuffer: Buffer) {
       date: date, // todays date,
       total: receipt.Total?.valueCurrency?.amount || 0,
       items:
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         receipt.Items?.valueArray?.map((item: any) => ({
           name: item.valueObject?.Description?.valueString || "Unknown Item",
           price: item.valueObject?.TotalPrice?.valueCurrency?.amount || 0,
