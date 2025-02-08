@@ -6,11 +6,7 @@ import { ReceiptItems } from "@/types";
 
 const listVariants = {
   hidden: { opacity: 0, y: -20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { staggerChildren: 0.2 },
-  },
+  visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.2 } },
 };
 
 const itemVariants = {
@@ -42,6 +38,34 @@ export default function ReceiptsPage() {
 
     fetchReceipts();
   }, []);
+
+  const handleDeleteReceipt = async () => {
+    if (!selectedReceipt) return;
+
+    try {
+      const response = await fetch(`/api/receipts/${selectedReceipt.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Failed to delete receipt:", errorData.error);
+        return;
+      }
+
+      const data = await response.json(); // Ensure JSON is parsed safely
+      console.log("Deleted receipt:", data);
+
+      // Remove deleted receipt from state
+      setReceipts((prevReceipts) =>
+        prevReceipts.filter((receipt) => receipt.id !== selectedReceipt.id)
+      );
+
+      setSelectedReceipt(null); // Clear selection
+    } catch (error) {
+      console.error("Error deleting receipt:", error);
+    }
+  };
 
   return (
     <div className="flex h-screen">
@@ -84,9 +108,18 @@ export default function ReceiptsPage() {
       {/* Right Side - Selected Receipt Details */}
       <div className="w-1/2 p-4">
         {selectedReceipt ? (
-          <div className="flex">
+          <div className="flex flex-col">
             <div className="p-4">
-              <h2 className="text-xl font-bold">{selectedReceipt.store}</h2>
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">{selectedReceipt.store}</h2>
+                {/* Delete Button */}
+                <button
+                  onClick={handleDeleteReceipt}
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
               <p className="text-gray-500">
                 {new Date(selectedReceipt.date).toLocaleDateString()}
               </p>
@@ -99,9 +132,8 @@ export default function ReceiptsPage() {
                       className="flex justify-between border-b py-1"
                     >
                       <span>{item.name}</span>
-                      <p className="p-4"></p>
                       <span className="font-medium">
-                        ${item.price.toFixed(2)}
+                        €{item.price.toFixed(2)}
                       </span>
                     </li>
                   ))

@@ -85,17 +85,19 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
+    console.log("DELETE request received");
     const user = await currentUser();
 
-    // Check if user is authenticated
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json(
@@ -103,6 +105,7 @@ export async function DELETE(req: NextRequest) {
         { status: 400 }
       );
     }
+    console.log("Deleting receipt with ID:", id);
 
     const { error } = await supabase
       .from("receipts")
@@ -115,12 +118,13 @@ export async function DELETE(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { message: "Receipt deleted successfully" },
+      { message: "Receipt deleted successfully", id },
       { status: 200 }
     );
-  } catch {
+  } catch (error) {
+    console.error("Error deleting receipt:", error);
     return NextResponse.json(
-      { error: "Something went wrong" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
