@@ -13,7 +13,8 @@ export async function GET() {
   const { data, error } = await supabase
     .from("receipts")
     .select("*, receipt_items(*)")
-    .eq("user_id", user.id); // Join with receipt_items
+    .eq("user_id", user.id)
+    .order("date", { ascending: false }); // Join with receipt_items
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
