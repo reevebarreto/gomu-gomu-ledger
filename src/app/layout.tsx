@@ -20,7 +20,7 @@ export default function RootLayout({
           </SignedOut>
           <SignedIn>
             <div className="h-screen grid grid-cols-6">
-              <div className="h-full">
+              <div className="sticky h-full top-0">
                 <Navbar />
               </div>
               <div className="col-span-5">{children}</div>

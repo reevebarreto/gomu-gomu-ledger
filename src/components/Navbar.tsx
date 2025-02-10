@@ -28,8 +28,10 @@ function NavItem({ href, text }: { href: string; text: string }) {
   return (
     <Link
       href={href}
-      className={`text-neutral-500 mt-1 px-2 py-2 rounded text-sm ${
-        active ? "bg-[#2c2c2c] text-neutral-200" : "hover:bg-[#2c2c2c]"
+      className={`mt-1 px-2 py-2 rounded text-sm ${
+        active
+          ? "bg-[#2c2c2c] text-neutral-200"
+          : "hover:bg-[#2c2c2c] text-neutral-500"
       }`}
     >
       {text}

@@ -11,4 +11,6 @@
 
 body {
   font-family: "Love Letter TW", sans-serif;
+  background-color: #191919;
+  @apply text-neutral-400;
 }

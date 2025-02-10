@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 
 export default function UploadPage() {
@@ -34,9 +33,9 @@ export default function UploadPage() {
       if (!response.ok) {
         throw new Error("Upload failed");
       }
-      setMessage("Upload successful!");
+      setMessage("Ding ding! You're all good!");
     } catch {
-      setMessage("An unexpected error occurred");
+      setMessage("Uh oh, something went wrong");
     } finally {
       setUploading(false);
     }
@@ -44,34 +43,52 @@ export default function UploadPage() {
 
   return (
     <div className="flex items-center justify-center p-4">
-      <div className="flex flex-col items-center justify-center space-y-4 border p-4 rounded-lg">
+      <div className="flex flex-col items-center justify-center space-y-4 p-4 rounded-lg">
+        <h1 className="text-2xl font-semibold">Upload Receipt</h1>
         <label className="flex flex-col cursor-pointer">
           <input type="file" accept="image/*" onChange={handleFileChange} />
         </label>
         {image && (
           <>
-            <div className="w-48 h-48 flex items-center justify-center border">
-              <Image
-                height={192}
-                width={192}
+            <div className="flex items-center justify-center border">
+              <img
                 src={image}
                 alt="Uploaded Receipt"
-                className="w-full h-full object-contain"
+                className="max-w-xs object-contain"
               />
             </div>
             <button
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 px-4 py-2 bg-sky-600 text-neutral-200 rounded disabled:opacity-50"
               onClick={handleUpload}
               disabled={!file || uploading}
             >
-              <Image
-                height={24}
-                width={24}
-                src="/camera.png"
-                alt="Camera Icon"
-                className="w-6 h-6"
-              />
-              <span>Upload Receipt</span>
+              {uploading ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    ></path>
+                  </svg>
+                  <span>Uploading...</span>
+                </>
+              ) : (
+                <span>Upload Receipt</span>
+              )}
             </button>
             {message && <p>{message}</p>}
           </>
