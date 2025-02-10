@@ -19,8 +19,12 @@ export default function RootLayout({
             <SignInButton />
           </SignedOut>
           <SignedIn>
-            <Navbar />
-            {children}
+            <div className="h-screen grid grid-cols-6">
+              <div className="h-full">
+                <Navbar />
+              </div>
+              <div className="col-span-5">{children}</div>
+            </div>
           </SignedIn>
         </body>
       </html>
