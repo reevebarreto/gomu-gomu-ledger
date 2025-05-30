@@ -8,10 +8,10 @@ A Next.js application to help track grocery spending and manage receipts effortl
 - User-friendly interface built with Next.js.
 
 ## 🛠️ Tech Stack
-- Next.js (React framework)
+- Next.js
 - Azure OCR (Optical Character Recognition) for data extraction
-- JavaScript/TypeScript (depending on your code)
-- Any database or storage (please specify if you use one, e.g., MongoDB, Firebase)
+- TypeScript
+- Supabase
 
 ## 📦 Getting Started
 ```bash
